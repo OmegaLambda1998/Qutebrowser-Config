@@ -24,7 +24,7 @@ const SCRIPTNAME = `fix-slack-notifications`;
 //  2: console.info
 //  3: console.debug
 //  4: console.trace
-const LOGLEVEL = 4;
+const LOGLEVEL = 2;
 const LOGGER = [console.error, console.warn, console.info, console.debug, console.trace];
 
 
