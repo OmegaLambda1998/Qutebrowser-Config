@@ -1,0 +1,39 @@
+body {
+    background-image: url("/home/patricka/.config/sway/wallpaper.png");
+    background-size: contain;
+    text-align: center;
+}
+
+.heading {
+    font-size: 36px;
+    color: white;
+}
+
+.quickmarks {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    list-style-type: none;
+    padding: 0;
+}
+
+.quickmarks li {
+    margin-bottom: 10px;
+}
+
+.quickmarks a {
+    text-decoration: none;
+    color: white;
+}
+
+.quickmarks .key {
+    font-weight: bold;
+    color: white;
+}
+
+.quickmarks .url {
+    text-decoration: underline
+}
+
+.quote {
+    color: white;
+}
