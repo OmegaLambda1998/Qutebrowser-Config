@@ -3,6 +3,7 @@
 #   qute://help/settings.html
 
 import os
+import yaml
 import string
 from urllib.parse import quote
 from qutebrowser.utils import message
@@ -11,8 +12,8 @@ config.load_autoconfig()
 
 HOME = os.environ.get('HOME')
 CONFIG = os.environ.get('CONFIG')
-BASE = os.environ.get('BASE')
-DOWNLOAD = f'{BASE}/Downloads'
+DESKTOP = os.environ.get('DESKTOP')
+DOWNLOAD = f'{DESKTOP}/Downloads'
 TERMINAL = os.environ.get('TERMINAL').split()
 EDITOR = os.environ.get('EDITOR')
 FILEMANAGER = os.environ.get('FILEMANAGER')
@@ -21,8 +22,12 @@ def mass_set(option, value, urls):
     for url in urls:
         config.set(option, value, url)
 
-def bind_chained(key, *commands):
-    config.bind(key, ' ;; '.join(commands))
+def bind_chained(key, *commands, **kwargs):
+    mode = kwargs.get('mode')
+    if mode is not None:
+        config.bind(key, ' ;; '.join(commands), mode=mode)
+    else:
+        config.bind(key, ' ;; '.join(commands))
 
 default_urls = [
     'mail.google.com',
@@ -41,13 +46,11 @@ config.load_autoconfig(False)
 # Aliases for commands. The keys of the given dictionary are the
 # aliases, while the values are the commands they map to.
 c.aliases = {
-    'q': 'close',
-    'qa': 'quit',
+    **c.aliases,
     'w': 'session-save --only-active-window',
-    'wq': 'quit --save',
-    'wqa': 'quit --save',
     'e': 'config-edit',
     's': 'config-source',
+    't': 'open -t ;;'
 }
 
 # Do not restore open sites when qutebrowser is reopened
@@ -58,6 +61,7 @@ c.auto_save.session = True
 #
 
 # Movement
+
 config.bind('<Ctrl-j>', 'tab-prev')
 config.bind('<Ctrl-j>', 'tab-prev', mode='passthrough')
 config.unbind('K')
@@ -76,6 +80,7 @@ config.bind('<Ctrl-Shift-l>', 'forward -t', mode='passthrough')
 config.unbind('H')
 
 # Try to avoid accidental tab killing & provide more passthrough functionality
+
 # Reload
 config.bind('<Ctrl-r>', 'reload')
 config.bind('<Ctrl-r>', 'reload', mode='passthrough')
@@ -98,36 +103,80 @@ config.bind('<Ctrl-t>', 'cmd-set-text --space :tab-select ')
 config.bind('<Ctrl-t>', 'cmd-set-text --space :tab-select ', mode='passthrough')
 # Open
 config.bind('<Ctrl-o>', 'cmd-set-text --space :open -s ')
-config.bind('<Ctrl-o>', 'cmd-set-text --space :open -s ', mode='passthrough')
+config.bind('<Ctrl-o>', 'cmd-set-text --space :open ', mode='passthrough')
 config.bind('<Ctrl-Shift-O>', 'cmd-set-text --space :open -s -t ')
-config.bind('<Ctrl-Shift-o>', 'cmd-set-text --space :open -s -t ', mode='passthrough')
+config.bind('<Ctrl-Shift-o>', 'cmd-set-text --space :open -t ', mode='passthrough')
 
 # Clean up persistent elements
 bind_chained('<Escape>', 'download-clear', 'zoom', 'search', 'clear-keychain', 'clear-messages')
+bind_chained('<Ctrl-Escape>', 'download-clear', 'zoom', 'search', 'clear-keychain', 'clear-messages', mode='passthrough')
 config.bind('<Escape>', 'mode-leave ;; jseval -q document.activeElement.blur()', mode='insert')
 
 # Hints
+# Copy code-block
 config.bind('yc', 'hint code userscript code_select')
 
+# Copy link url
+config.bind('yf', 'hint all yank')
+
+# Hint input fields
+config.bind('I', 'hint inputs')
+
+# Hint pdfs
+config.bind('pf', 'hint pdf')
+config.bind('py', 'hint pdf yank')
+
+# URL Pattern config_cycle
+# colors.webpage.darkmode.enabled
+config.bind(',d', 'spawn --userscript config_cycle_url --print colors.webpage.darkmode.enabled ;; reload -f')
+
+# Overleaf
+# Download PDF
+config.bind('<Ctrl-,>w', 'spawn --userscript overleaf compile', mode='passthrough')
 
 #
 ### Colours
 #
 
-# What colour should the background be if unset
 c.colors.webpage.bg = 'black'
 
 # Value to use for `prefers-color-scheme:` for websites
 c.colors.webpage.preferred_color_scheme = 'dark'
 
-# Do not render all web contents using a dark theme
+# Dark mode controls
+
 c.colors.webpage.darkmode.enabled = True
 
-# Which images to apply dark mode to
-c.colors.webpage.darkmode.policy.images = 'never'
+# Opposite mode for these urls
+#with (config.configdir / 'autoconfig.yml').open() as f:
+#    yaml_data = yaml.safe_load(f)
+#    yaml_settings = yaml_data.get('settings', {})
+#    darkmode_settings = yaml_settings.get('colors.webpage.darkmode.enabled', {})
+#    inversemode_urls = [k for (k, v) in darkmode_settings.items() if v != c.colors.webpage.darkmode.enabled]
+#
+#mass_set('colors.webpage.darkmode.enabled', not c.colors.webpage.darkmode.enabled, inversemode_urls)
 
-# Which pages to apply dark mode to
-c.colors.webpage.darkmode.policy.page = 'smart'
+# What algorithm to apply
+#c.colors.webpage.darkmode.algorithm = 'lightness-cielab'
+
+# Contrast for dark mode
+# Only has an effect on lightness-hsl or brightness-rgb algorithms
+#if c.colors.webpage.darkmode.algorithm != 'lightness-cielab':
+#    c.colors.webpage.darkmode.contrast = 0.0
+#
+## Which images to apply dark mode to
+#c.colors.webpage.darkmode.policy.images = 'never'
+#
+## Which pages to apply dark mode to
+#c.colors.webpage.darkmode.policy.page = 'smart'
+#
+## When to invert background elements
+## 0 -> Always invert, 256 -> Never invert
+#c.colors.webpage.darkmode.threshold.background = 0
+#
+## When to invert background elements
+## 0 -> Never invert, 256 -> Always invert
+#c.colors.webpage.darkmode.threshold.foreground = 256
 
 #
 ### Completion
@@ -162,7 +211,7 @@ c.content.blocking.method = 'both'
 c.content.default_encoding = 'utf-8'
 
 # Automatically open pdf's using pdfjs
-c.content.pdfjs = True
+c.content.pdfjs = False
 
 # Request reduced motion (minimise animations) to improve performance
 c.content.prefers_reduced_motion = True
@@ -207,11 +256,22 @@ c.fileselect.multiple_files.command = [*TERMINAL, FILEMANAGER, '--chooser-file {
 ### Hints
 #
 
+c.hints.auto_follow = 'always'
+
 c.hints.selectors["code"] = [
     # Selects all code tags whose direct parent is not a pre tag
     ":not(pre) > code",
     "pre"
 ]
+
+c.hints.selectors["pdf"] = [
+    # Selects all links who's href contains pdf
+    "a[href*='pdf']",
+    "area[href*='pdf']",
+    "link[href*='pdf']",
+    "[role='link'][href*='pdf']",
+]
+
 
 #
 ### Input
@@ -221,7 +281,9 @@ c.hints.selectors["code"] = [
 # c.input.insert_mode.auto_load = True
 
 # Enter passthrough mode for the given urls
-# mass_set('input.mode_override', 'passthrough', default_urls)
+config.set('input.mode_override', 'passthrough', 'www.overleaf.com/project/*')
+config.set('input.mode_override', 'normal', 'www.overleaf.com/project/*/detached')
+config.set('input.mode_override', 'passthrough', 'docs.google.com')
 
 #
 # TODO: Test
@@ -372,14 +434,15 @@ class DuckDuckGoSearchString(str):
 # Define search engines
 c.url.searchengines = {
     'DEFAULT': DuckDuckGoSearchString('https://duckduckgo.com/?q={}'),
-    'g': 'https://google.com/search?q={}', # Google
-    'sr': 'https://www.reddit.com/r/{}', # Subreddit
+    'g':   'https://google.com/search?q={}', # Google
+    'sr':  'https://www.reddit.com/r/{}', # Subreddit
     'arx': 'https://arxiv.org/search/physics/?query={}&searchtype=all&abstract=show&size=200&order=', # Arxiv
     'ads': 'https://ui.adsabs.harvard.edu/search/q={}', # ADS
-    'gh': 'https://github.com/search?q={}&type=repositories', # Github
+    'gh':  'https://github.com/search?q={}&type=repositories', # Github
     'arw': 'https://wiki.archlinux.org/index.php?search={}', # Arch Wiki
     'arp': 'https://archlinux.org/packages/?sort=&q={}&maintainer=&flagged=', # Arch Packages
     'aru': 'https://aur.archlinux.org/packages?O=0&K={}', # AUR
+    'doi': 'https://dx.doi.org/{}',
     'passthrough': '{}', # Go exactly to the given url
 }
 
