@@ -148,13 +148,12 @@ c.colors.webpage.preferred_color_scheme = 'dark'
 c.colors.webpage.darkmode.enabled = True
 
 # Opposite mode for these urls
-#with (config.configdir / 'autoconfig.yml').open() as f:
-#    yaml_data = yaml.safe_load(f)
-#    yaml_settings = yaml_data.get('settings', {})
-#    darkmode_settings = yaml_settings.get('colors.webpage.darkmode.enabled', {})
-#    inversemode_urls = [k for (k, v) in darkmode_settings.items() if v != c.colors.webpage.darkmode.enabled]
-#
-#mass_set('colors.webpage.darkmode.enabled', not c.colors.webpage.darkmode.enabled, inversemode_urls)
+inverse_mode_urls = [
+    'qute://*/*',
+    'file:///*',
+]
+
+mass_set('colors.webpage.darkmode.enabled', not c.colors.webpage.darkmode.enabled, inverse_mode_urls)
 
 # What algorithm to apply
 #c.colors.webpage.darkmode.algorithm = 'lightness-cielab'
