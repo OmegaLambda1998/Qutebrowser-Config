@@ -128,7 +128,7 @@ config.bind('py', 'hint pdf yank')
 
 # URL Pattern config_cycle
 # colors.webpage.darkmode.enabled
-config.bind(',d', 'spawn --userscript config_cycle_url --print colors.webpage.darkmode.enabled ;; reload -f')
+config.bind(',d', 'spawn --userscript config_cycle_url --print colors.webpage.darkmode.enabled')
 
 # Overleaf
 # Download PDF

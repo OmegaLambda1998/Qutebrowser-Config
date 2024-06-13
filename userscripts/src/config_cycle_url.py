@@ -9,6 +9,7 @@ import tldextract
 from userscript_utils import *
 
 def main(args):
+    url = QUTE_URL
     extracts = tldextract.extract(url)
     scheme, parts = url.split('://')
     parts = parts.split('/')
@@ -19,18 +20,18 @@ def main(args):
         pattern = f'{scheme}://{parts[0]}'
     else:
         extract_components = [
-            extracts.subdomain,
-            extracts.domain,
-            extracts.suffix,
+            str(extracts.subdomain),
+            str(extracts.domain),
+            str(extracts.suffix),
         ]
-        pattern_components = [e for e in extracts if len(e) > 0]
+        pattern_components = [e for e in extract_components if len(e) > 0]
         if len(pattern_components) > 1:
             pattern = '.'.join(pattern_components)
         elif len(pattern_components) == 1:
             pattern = pattern_components[0]
 
     if pattern is not None:
-        info(f"Pattern: {pattern}")
+        info(f"Cycling {args} for pattern: {pattern}", clear=False)
         send_command(f'config-cycle --pattern {pattern} {args}')
 
 if __name__ == "__main__":
